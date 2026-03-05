@@ -62,13 +62,20 @@ export function parseHostname(input: string): string {
     .split("/")[0]
     .toLowerCase();
 
-  // Validate non-empty
+  // FQDN notation (trailing dot): strip the dot and use domain as-is without appending .localhost
+  // e.g. mydomain.test. → mydomain.test
+  const isFqdn = hostname.endsWith(".");
+  if (isFqdn) {
+    hostname = hostname.slice(0, -1);
+  }
+
+  // Validate non-empty (after stripping FQDN dot so "." or ".localhost." are also caught)
   if (!hostname || hostname === ".localhost") {
     throw new Error("Hostname cannot be empty");
   }
 
-  // Add .localhost if not present
-  if (!hostname.endsWith(".localhost")) {
+  // Add .localhost if not present (non-FQDN only)
+  if (!isFqdn && !hostname.endsWith(".localhost")) {
     hostname = `${hostname}.localhost`;
   }
 
